@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}{% block page_title %}Upload Content{% endblock %}{% endblock %}
+
+{% block content %}
+<div data-upload="container">
+    <h1>{% block page_title_header %}{% endblock %}</h1>
+
+    <!-- Optional Info Panel (Used by Re-Upload) -->
+    {% block upload_info %}{% endblock %}
+
+    <form id="upload-form"
+          hx-post="{% block form_url %}{% endblock %}"
+          enctype="multipart/form-data"
+          hx-encoding="multipart/form-data"
+          hx-target="#upload-result-container"
+          hx-swap="innerHTML"
+          hx-indicator="#upload-indicator">
+        {% csrf_token %}
+
+        <!-- Step 1: Select Folder -->
+        <div data-upload="step">
+            <h3>1. Select Folder</h3>
+            
+            <label for="folder-input" data-upload="dropzone" id="dropzone-prompt" style="display: block;">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📁</div>
+                <p>{% block dropzone_text %}Click here to BROWSE your folder{% endblock %}</p>
+                <p data-upload="hint">
+                    Must contain: <strong>en/</strong>, <strong>de/</strong>,
+                    and <strong>shared-assets/</strong> directories
+                </p>
+            </label>
+
+            <div id="dropzone-analysis" data-upload="analysis" style="display: none;">
+                <div class="analysis-header" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
+                    <span class="analysis-icon">📂</span>
+                    <div>
+                        <strong id="analysis-name">—</strong>
+                        <span id="analysis-count" class="analysis-meta">0 files</span>
+                        <span id="analysis-size" class="analysis-meta">0 KB</span>
+                    </div>
+                </div>
+                <button type="button" data-type="secondary" data-size="sm" onclick="document.getElementById('folder-input').click()" style="margin-top: 1rem;">
+                    Change Folder
+                </button>
+            </div>
+
+            <!-- HTMX handles the files natively because name="folder_files" is intact -->
+            <input type="file"
+                   id="folder-input"
+                   name="folder_files"
+                   webkitdirectory
+                   directory
+                   multiple
+                   required
+                   data-upload="hidden-input">
+        </div>
+
+        <!-- Step 2: Folder Name -->
+        <div data-upload="step">
+            <h3>2. {% block folder_name_label %}Folder Name (Identifier){% endblock %}</h3>
+            <input type="text"
+                   id="folder-name-input"
+                   name="folder_name"
+                   value="{% block folder_name_value %}{% endblock %}"
+                   placeholder="e.g., Product_Page_v2"
+                   maxlength="255"
+                   required>
+            <p data-form="help-text">Letters, digits, hyphens, and underscores only.</p>
+        </div>
+
+        <!-- Step 3: Upload Progress Indicator -->
+        <div id="upload-indicator" class="htmx-indicator">
+            <div data-upload="step">
+                <h3>3. Upload & Processing Progress</h3>
+                <div data-upload="progress-section">
+                    <div data-upload="progress-label">
+                        <span>Uploading and processing files on server...</span>
+                    </div>
+                    <div data-upload="progress-bar-container">
+                        <div data-upload="progress-bar" data-state="processing"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Container -->
+        <div id="upload-result-container"></div>
+
+        <button type="submit" data-type="primary" data-width="full" id="submit-btn" disabled>
+            {% block submit_btn_text %}UPLOAD & PREVIEW{% endblock %}
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Pure DOM UI Update and Path Injection. No hacking the HTMX payload!
+    document.addEventListener('change', e => {
+        if (e.target.id !== 'folder-input' || !e.target.files.length) return;
+        
+        const form = document.getElementById('upload-form');
+        const files = Array.from(e.target.files);
+        
+        // 1. Remove old injected paths if the user changes their mind and selects a different folder
+        form.querySelectorAll('.dynamic-path').forEach(el => el.remove());
+
+        // 2. Calculate sizes and inject new hidden paths
+        let totalSize = 0;
+        files.forEach(f => {
+            totalSize += f.size;
+            
+            // Inject hidden HTML inputs so HTMX natively reads the paths
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'file_paths';
+            hidden.className = 'dynamic-path';
+            hidden.value = (f.webkitRelativePath || f.name).replace(/\\/g, '/');
+            form.appendChild(hidden);
+        });
+
+        // 3. Update the UI
+        const rootName = (files[0].webkitRelativePath || files[0].name).split('/')[0];
+        document.getElementById('analysis-name').textContent = rootName;
+        document.getElementById('analysis-count').textContent = files.length + ' files';
+        document.getElementById('analysis-size').textContent = (totalSize / 1024).toFixed(1) + ' KB';
+        document.getElementById('dropzone-prompt').style.display = 'none';
+        document.getElementById('dropzone-analysis').style.display = 'block';
+        document.getElementById('submit-btn').disabled = false;
+
+        const nameInp = document.getElementById('folder-name-input');
+        if (nameInp && !nameInp.value) nameInp.value = rootName.replace(/[^a-zA-Z0-9_-]/g, '_');
+    });
+</script>
+{% endblock %}

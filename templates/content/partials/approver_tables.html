@@ -1,0 +1,423 @@
+<!-- Section 1: Current Live State (Production)   -->
+
+<section data-dash="section">
+    <h2> CURRENT LIVE STATE (Production) </h2>
+    <table data-table="main">
+
+        <thead>
+            <tr>
+                <th>Active Folder</th>
+                <th>Hash ID</th>
+                <th>Deployed By</th>
+                <th>Time Since Live</th>
+                <th>Live Links</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for state in live_states %}
+            <tr>
+                <td>{{ state.folder_name }}</td>
+                <td data-table="hash-cell" title="{{ state.current_hash }}">
+                    {{ state.current_hash|truncatechars:12 }}
+                </td>
+                <td>{{ state.updated_by.username|default:"—" }}</td>
+                <td>{{ state.last_updated|timesince }} ago</td>
+                <td>
+                    {% if state.source_upload %}
+                        <div data-lang="links">
+                            {% for lang in state.source_upload.get_all_production_urls %}
+                                <a href="{{ lang.url }}" target="_blank"
+                                   data-type="success" data-size="sm"
+                                   title="View {{ lang.label }} (Live)">
+                                    {{ lang.code|upper }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if state.source_upload %}
+                    <details>
+                        <summary>
+                            <button type="button"
+                                    data-type="warning" data-size="sm">
+                                Unpublish
+                            </button>
+                        </summary>
+                        <div data-reason="form">
+                            <form method="post"
+                                  action="{% url 'unpublish_upload' state.source_upload.pk %}">
+                                {% csrf_token %}
+                                <textarea name="reason"
+                                          data-reason="textarea"
+                                          placeholder="Why are you unpublishing? (optional)"
+                                          rows="2"></textarea>
+                                <div data-reason="form-actions">
+                                    <button type="submit" data-type="warning" data-size="sm">
+                                        Confirm Unpublish
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </details>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" data-table="empty-state">
+                    No content is currently live in production.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+
+<!-- Section 2: Pending Reviews                   -->
+
+<section data-dash="section">
+    <h2> PENDING REVIEWS </h2>
+    <table data-table="main">
+        <thead>
+            <tr>
+                <th>Folder Name</th>
+                <th>Creator</th>
+                <th>Hash</th>
+                <th>Test Links</th>
+                <th>Decision</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for upload in pending_uploads %}
+            <tr>
+                <td>{{ upload.folder_name }}</td>
+                <td>{{ upload.uploaded_by.username|default:"—" }}</td>
+                <td data-table="hash-cell" title="{{ upload.hash_value }}">
+                    {{ upload.hash_value|truncatechars:12 }}
+                </td>
+                <td>
+                    <div data-lang="links">
+                        {% for lang in upload.get_all_test_urls %}
+                            <a href="{{ lang.url }}" target="_blank"
+                               data-type="info" data-size="sm"
+                               title="Open {{ lang.label }} test site">
+                                {{ lang.code|upper }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </td>
+                <td data-table="actions-cell">
+                    {# Approve button #}
+                    <form method="post"
+                          action="{% url 'approve_upload' upload.pk %}"
+                          style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" data-type="success" data-size="sm">
+                            ✓ Approve
+                        </button>
+                    </form>
+
+                    {# Reject button — opens reason form #}
+                    <details>
+                        <summary>
+                            <button type="button"
+                                    data-type="danger" data-size="sm">
+                                ✗ Reject
+                            </button>
+                        </summary>
+                        <div data-reason="form">
+                            <form method="post"
+                                  action="{% url 'reject_upload' upload.pk %}">
+                                {% csrf_token %}
+                                <textarea name="reason"
+                                          data-reason="textarea"
+                                          placeholder="Tell the creator what needs to be fixed..."
+                                          rows="3"
+                                          required></textarea>
+                                <div data-reason="form-actions">
+                                    <button type="submit" data-type="danger" data-size="sm">
+                                        Confirm Rejection
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </details>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" data-table="empty-state">
+                    No uploads pending review.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+
+<!-- Section 3: Approved (Ready to Publish)       -->
+
+{% if approved_uploads %}
+<section data-dash="section">
+    <h2> APPROVED (Ready to Publish) </h2>
+    <table data-table="main">
+        <thead>
+            <tr>
+                <th>Folder Name</th>
+                <th>Creator</th>
+                <th>Hash</th>
+                <th>Preview</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for upload in approved_uploads %}
+            <tr>
+                <td>{{ upload.folder_name }}</td>
+                <td>{{ upload.uploaded_by.username|default:"—" }}</td>
+                <td data-table="hash-cell">{{ upload.hash_value|truncatechars:12 }}</td>
+                <td>
+                    <div data-lang="links">
+                        {% for lang in upload.get_all_test_urls %}
+                            <a href="{{ lang.url }}" target="_blank"
+                               data-type="info" data-size="sm">
+                                {{ lang.code|upper }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </td>
+                <td>
+                    <details>
+                        <summary>
+                            <button type="button" data-type="primary" data-size="sm">
+                                🚀 Publish
+                            </button>
+                        </summary>
+                        <form method="post"
+                              action="{% url 'publish_upload' upload.pk %}"
+                              style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" data-type="primary" data-size="sm">
+                                Confirm Publish
+                            </button>
+                        </form>
+                    </details>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+
+<!-- Section 4: Rejected (Can Re-approve)         -->
+
+{% if rejected_uploads %}
+<section data-dash-section="rejected">
+    <h2> REJECTED UPLOADS (Can Re-approve) </h2>
+    <table data-table="main">
+        <thead>
+            <tr>
+                <th>Folder Name</th>
+                <th>Creator</th>
+                <th>Hash</th>
+                <th>Rejection Reason</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for upload in rejected_uploads %}
+            <tr>
+                <td>{{ upload.folder_name }}</td>
+                <td>{{ upload.uploaded_by.username|default:"—" }}</td>
+                <td data-table="hash-cell">{{ upload.hash_value|truncatechars:12 }}</td>
+                <td data-feedback="cell">
+                    {% with action_info=upload.get_latest_action_reason %}
+                        {% if action_info and action_info.reason %}
+                            <div data-feedback="box" data-feedback="rejected">
+                                <strong data-feedback="header">{{ action_info.actor }}</strong>:
+                                {{ action_info.reason }}
+                                <br><small data-feedback="time">{{ action_info.timestamp|timesince }} ago</small>
+                            </div>
+                        {% else %}
+                            <span data-text="muted">No reason provided</span>
+                        {% endif %}
+                    {% endwith %}
+                </td>
+                <td data-table="actions-cell">
+                    <form method="post"
+                          action="{% url 'approve_upload' upload.pk %}"
+                          style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" data-type="success" data-size="sm">
+                            ✓ Re-approve
+                        </button>
+                    </form>
+                    <details>
+                        <summary>
+                            <button type="button" data-type="danger" data-size="sm">
+                                Delete
+                            </button>
+                        </summary>
+                        <form method="post"
+                              action="{% url 'delete_upload' upload.pk %}"
+                              style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" data-type="danger" data-size="sm">
+                                Confirm Delete
+                            </button>
+                        </form>
+                    </details>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+
+<!-- Section 5: Unpublished (Can Re-approve)      -->
+
+{% if unpublished_uploads %}
+<section data-dash-section="unpublished">
+    <h2> UNPUBLISHED UPLOADS (Can Re-approve) </h2>
+    <table data-table="main">
+        <thead>
+            <tr>
+                <th>Folder Name</th>
+                <th>Creator</th>
+                <th>Hash</th>
+                <th>Unpublish Reason</th>
+                <th>Test Links</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for upload in unpublished_uploads %}
+            <tr>
+                <td>{{ upload.folder_name }}</td>
+                <td>{{ upload.uploaded_by.username|default:"—" }}</td>
+                <td data-table="hash-cell">{{ upload.hash_value|truncatechars:12 }}</td>
+                <td data-feedback="cell">
+                    {% with action_info=upload.get_latest_action_reason %}
+                        {% if action_info and action_info.reason %}
+                            <div data-feedback="box" data-feedback="unpublished">
+                                <strong data-feedback="header">{{ action_info.actor }}</strong>:
+                                {{ action_info.reason }}
+                                <br><small data-feedback="time">{{ action_info.timestamp|timesince }} ago</small>
+                            </div>
+                        {% else %}
+                            <span data-text="muted">No reason provided</span>
+                        {% endif %}
+                    {% endwith %}
+                </td>
+                <td>
+                    <div data-lang="links">
+                        {% for lang in upload.get_all_test_urls %}
+                            <a href="{{ lang.url }}" target="_blank"
+                               data-type="info" data-size="sm">
+                                {{ lang.code|upper }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </td>
+                <td data-table="actions-cell">
+                    <form method="post"
+                          action="{% url 'approve_upload' upload.pk %}"
+                          style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" data-type="success" data-size="sm">
+                            ✓ Re-approve
+                        </button>
+                    </form>
+                    <details>
+                        <summary>
+                            <button type="button" data-type="danger" data-size="sm">
+                                Delete
+                            </button>
+                        </summary>
+                        <form method="post"
+                              action="{% url 'delete_upload' upload.pk %}"
+                              style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" data-type="danger" data-size="sm">
+                                Confirm Delete
+                            </button>
+                        </form>
+                    </details>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+
+<!--  Section 6: Deleted (Can Restore)             -->
+
+{% if deleted_uploads %}
+<section data-dash-section="deleted">
+    <h2> DELETED (Can Be Restored) </h2>
+    <table data-table="main">
+        <thead>
+            <tr>
+                <th>Folder Name</th>
+                <th>Creator</th>
+                <th>Hash</th>
+                <th>Deleted By</th>
+                <th>Deleted At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for upload in deleted_uploads %}
+            <tr data-table-row="deleted">
+                <td>{{ upload.folder_name }}</td>
+                <td>{{ upload.uploaded_by.username|default:"—" }}</td>
+                <td data-table="hash-cell" title="{{ upload.hash_value }}">
+                    {{ upload.hash_value|truncatechars:12 }}
+                </td>
+                <td>
+                    {% if upload.deleted_by %}
+                        {{ upload.deleted_by.username }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
+                    {% if upload.deleted_at %}
+                        {{ upload.deleted_at|date:"M d, H:i" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td data-table="actions-cell">
+                    <details>
+                        <summary>
+                            <button type="button" data-type="secondary" data-size="sm">
+                                Restore
+                            </button>
+                        </summary>
+                        <form method="post"
+                              action="{% url 'restore_upload' upload.pk %}"
+                              style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" data-type="secondary" data-size="sm">
+                                Confirm Restore
+                            </button>
+                        </form>
+                    </details>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}

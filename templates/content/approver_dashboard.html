@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Approver Control Center{% endblock %}
+
+{% block content %}
+<div data-dash="header">
+    <h1>APPROVER CONTROL CENTER</h1>
+    <div data-dash="actions">
+        <div data-dash="search-box">
+            <form method="get" action="{% url 'dashboard' %}">
+                <input type="text"
+                    id="search-input"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Filter by folder name..."
+                    data-dash="search-input"
+                    autocomplete="off">
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="approver-tables-container">
+    {% include "content/partials/approver_tables.html" %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

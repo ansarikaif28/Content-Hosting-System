@@ -1,0 +1,179 @@
+<table data-table>
+    <thead>
+        <tr>
+            <th>
+                <a href="?sort={% if current_sort == 'folder_name' %}-{% endif %}folder_name&q={{ search_query }}"
+                   data-sort>
+                    Folder Name
+                    {% if current_sort == 'folder_name' %}▲{% elif current_sort == '-folder_name' %}▼{% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?sort={% if current_sort == 'uploaded_at' %}-{% endif %}uploaded_at&q={{ search_query }}"
+                   data-sort>
+                    Uploaded At
+                    {% if current_sort == '-uploaded_at' %}▼{% elif current_sort == 'uploaded_at' %}▲{% endif %}
+                </a>
+            </th>
+            <th>Hash (ID)</th>
+            <th>
+                <a href="?sort={% if current_sort == 'status' %}-{% endif %}status&q={{ search_query }}"
+                   data-sort>
+                    Status
+                    {% if current_sort == 'status' %}▲{% elif current_sort == '-status' %}▼{% endif %}
+                </a>
+            </th>
+            <th>Feedback</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for upload in uploads %}
+        <tr data-row-status="{% if upload.status == 'REJECTED' %}rejected{% elif upload.status == 'UNPUBLISHED' %}unpublished{% elif upload.status == 'DELETED' %}deleted{% endif %}">
+            <td>{{ upload.folder_name }}</td>
+            <td>{{ upload.uploaded_at|date:"M d, H:i" }}</td>
+            <td data-cell="hash" title="{{ upload.hash_value }}">
+                {{ upload.hash_value|truncatechars:12 }}
+            </td>
+            <td>
+                <span data-status="{{ upload.status|lower }}">
+                    {{ upload.get_status_display }}
+                </span}
+            </td>
+
+            {#  FEEDBACK COLUMN  #}
+            <td data-cell="feedback">
+                {% if upload.status == 'REJECTED' or upload.status == 'UNPUBLISHED' %}
+                    {% with action_info=upload.get_latest_action_reason %}
+                        {% if action_info %}
+                            <div data-feedback-box data-feedback-type="{{ upload.status|lower }}">
+                                <div data-feedback="header">
+                                    <strong>{{ action_info.actor }}</strong>
+                                    <span data-feedback="time">{{ action_info.timestamp|timesince }} ago</span>
+                                </div>
+                                {% if action_info.reason %}
+                                    <p data-feedback="reason">{{ action_info.reason }}</p>
+                                {% else %}
+                                    <p data-feedback="reason" data-feedback-type="no-reason">No reason provided.</p>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span data-text="muted">—</span>
+                        {% endif %}
+                    {% endwith %}
+                {% elif upload.status == 'DELETED' %}
+                    {% if upload.deleted_by and upload.deleted_by.is_approver %}
+                        <div data-feedback-box data-feedback-type="deleted">
+                            <div data-feedback="header">
+                                <strong>{{ upload.deleted_by.username }}</strong>
+                            </div>
+                            <p data-feedback="reason">
+                                This upload was deleted by an approver.
+                                You cannot restore it, but you can upload a new version.
+                            </p>
+                        </div>
+                    {% else %}
+                        <div data-feedback-box data-feedback-type="deleted">
+                            <p data-feedback="reason">
+                                This upload was deleted by you and can be restored.
+                            </p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <span data-text="muted">—</span>
+                {% endif %}
+            </td>
+
+            {#  ACTIONS COLUMN  #}
+            <td data-cell="actions">
+                {#  PREVIEW (test environment)  #}
+                {% if upload.status == 'PENDING' or upload.status == 'APPROVED' or upload.status == 'UNPUBLISHED' %}
+                    <div data-links="lang">
+                        {% for lang in upload.get_all_test_urls %}
+                            <a href="{{ lang.url }}" target="_blank"
+                               data-type="info" data-size="sm"
+                               title="Preview {{ lang.label }}">
+                                Preview {{ lang.code|upper }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {#  VIEW LIVE (production)  #}
+                {% if upload.status == 'PUBLISHED' %}
+                    <div data-links="lang">
+                        {% for lang in upload.get_all_production_urls %}
+                            <a href="{{ lang.url }}" target="_blank"
+                               data-type="success" data-size="sm"
+                               title="View {{ lang.label }} (Live)">
+                                Live {{ lang.code|upper }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {#  RE-UPLOAD (for rejected/unpublished)  #}
+                {% if upload.status == 'REJECTED' or upload.status == 'UNPUBLISHED' %}
+                    <a href="{% url 'reupload_content' upload.pk %}"
+                       data-type="primary" data-size="sm"
+                       title="Upload a fixed version">
+                        📤 Re-upload
+                    </a>
+                {% endif %}
+
+                {#  RESTORE / UPLOAD NEW VERSION for deleted  #}
+                {% if upload.status == 'DELETED' %}
+                    {% if upload.deleted_by and upload.deleted_by.is_approver %}
+                        <a href="{% url 'upload' %}"
+                           data-type="warning" data-size="sm"
+                           title="Upload a new version">
+                            Upload New Version
+                        </a>
+                    {% else %}
+                        <details>
+                            <summary>
+                                <button type="button" data-type="secondary" data-size="sm">
+                                    Restore
+                                </button>
+                            </summary>
+                            <form method="post"
+                                  action="{% url 'restore_upload' upload.pk %}"
+                                  style="display:inline; margin-top:4px;">
+                                {% csrf_token %}
+                                <button type="submit" data-type="secondary" data-size="sm">
+                                    Confirm Restore
+                                </button>
+                            </form>
+                        </details>
+                    {% endif %}
+                {% endif %}
+
+                {#  DELETE  #}
+                {% if upload.status != 'DELETED' %}
+                    <details>
+                        <summary>
+                            <button type="button" data-type="danger" data-size="sm">
+                                Delete
+                            </button>
+                        </summary>
+                        <form method="post"
+                              action="{% url 'delete_upload' upload.pk %}"
+                              style="display:inline; margin-top:4px;">
+                            {% csrf_token %}
+                            <button type="submit" data-type="danger" data-size="sm">
+                                Confirm Delete
+                            </button>
+                        </form>
+                    </details>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" data-state="empty">
+                No uploads yet. Click "+ UPLOAD NEW FOLDER" to get started.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

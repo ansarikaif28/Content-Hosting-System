@@ -1,0 +1,50 @@
+{% extends "upload_base.html" %}
+
+{% block page_title %}Re-upload Content{% endblock %}
+{% block page_title_header %}RE-UPLOAD CONTENT{% endblock %}
+
+{% block upload_info %}
+<div data-upload="step">
+    <div data-form-group>
+        <label>Original Folder:</label>
+        <div>{{ original_upload.folder_name }}</div>
+    </div>
+    
+    <div data-form-group>
+        <label>Status:</label>
+        <span data-status-badge data-state="{{ original_upload.status|lower }}">
+            {{ original_upload.get_status_display }}
+        </span>
+    </div>
+
+    {% if reason %}
+    <div data-feedback="box" data-feedback="{{ original_upload.status|lower }}">
+        <div data-feedback="header">
+            <strong>
+                {% if original_upload.status == 'REJECTED' %}
+                    Rejection Message:
+                {% elif original_upload.status == 'UNPUBLISHED' %}
+                    Unpublish Reason:
+                {% else %}
+                    Feedback:
+                {% endif %}
+            </strong>
+        </div>
+        <p data-feedback="reason">{{ reason }}</p>
+    </div>
+    {% else %}
+    <div data-feedback="box" data-feedback="unpublished">
+        <div data-feedback="header"><strong>Feedback:</strong></div>
+        <p data-feedback="no-reason">No feedback message was provided.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block form_url %}{% url 'reupload_htmx' original_upload.pk %}{% endblock %}
+
+{% block dropzone_text %}Click here to BROWSE your updated folder{% endblock %}
+{% block folder_name_label %}Updated Folder Name{% endblock %}
+{% block folder_name_value %}{{ original_upload.folder_name }}{% endblock %}
+
+{% block submit_btn_text %}RE-UPLOAD & PREVIEW{% endblock %}

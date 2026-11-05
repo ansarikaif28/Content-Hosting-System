@@ -1,0 +1,28 @@
+# Content Hosting System - Python Dependencies
+# Generated from codebase analysis
+
+# Core Framework
+django>=5.0,<6.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# HTMX support for Django
+django-htmx>=1.17.0
+
+# Static file serving in production
+whitenoise>=6.6.0
+
+# Production server (optional, for deployment)
+# gunicorn>=21.2.0
+
+# Database support (uncomment based on your database)
+# psycopg2-binary>=2.9.9  # For PostgreSQL
+# mysqlclient>=2.2.0       # For MySQL
+
+# Development dependencies (optional)
+# pytest>=7.4.0
+# pytest-django>=4.7.0
+# coverage>=7.3.0
+# black>=23.0.0
+# flake8>=6.0.0

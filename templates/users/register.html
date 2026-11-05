@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — Content Hosting System</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body data-page="login">
+    <div data-login="container">
+        <div data-login="card">
+            <h1 data-login="title">CREATE ACCOUNT</h1>
+            <p data-register="subtitle">
+                Register as a <strong>Creator</strong> to upload content folders.
+            </p>
+
+            {% if form.non_field_errors %}
+            <div role="alert" data-alert="danger">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'register' %}">
+                {% csrf_token %}
+
+                <!-- Username -->
+                <div data-form-group>
+                    <label for="id_username">Username:</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        {% for error in form.username.errors %}
+                            <p data-form="error-text">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div data-form-group>
+                    <label for="id_email">Email:</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        {% for error in form.email.errors %}
+                            <p data-form="error-text">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div data-form-group>
+                    <label for="id_password1">Password:</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        {% for error in form.password1.errors %}
+                            <p data-form="error-text">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                    <p data-form="help-text">Must be at least 8 characters.</p>
+                </div>
+
+                <!-- Confirm Password -->
+                <div data-form-group>
+                    <label for="id_password2">Confirm Password:</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        {% for error in form.password2.errors %}
+                            <p data-form="error-text">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <button type="submit" data-type="primary" data-width="full">
+                    CREATE CREATOR ACCOUNT
+                </button>
+            </form>
+
+            <div data-login="footer">
+                <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

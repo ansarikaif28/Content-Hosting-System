@@ -1,0 +1,51 @@
+
+<!-- Processing Steps -->
+<div id="processing-steps">
+    {% for step in steps %}
+        <!-- We safely pass the delay into a CSS variable -->
+        <div data-step-item 
+             data-step-state="{{ step.status }}" 
+             class="seq-animate" 
+             style="--delay: {{ step.delay }}ms;">
+            
+            <div data-step-indicator>
+                {% if step.status == 'pass' %}
+                    <span data-step-icon data-step-icon-state="pass">✓</span>
+                {% elif step.status == 'fail' %}
+                    <span data-step-icon data-step-icon-state="fail">✗</span>
+                {% else %}
+                    <span data-step-icon-skip>—</span>
+                {% endif %}
+            </div>
+            
+            <div data-step-content>
+                <span data-step-label>{{ step.label }}</span>
+                <span data-step-detail>{{ step.message|default:"" }}</span>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Final Result Box -->
+<div id="upload-result" 
+     data-upload-result="{% if success %}success{% else %}error{% endif %}"
+     class="seq-animate" 
+     style="--delay: {{ final_delay }}ms;">
+    
+    {% if success %}
+        <div data-upload="result-icon">🎉</div>
+        <div data-upload="result-message">
+            <strong>Upload Successful!</strong>
+            <p>{{ message }}</p>
+        </div>
+        <a href="{{ redirect_url|default:'/dashboard/' }}" data-upload="dashboard-link">GO TO DASHBOARD →</a>
+    {% else %}
+        <div data-upload="result-icon">❌</div>
+        <div data-upload="result-message">
+            <strong>Upload Failed</strong>
+            <p>{{ error }}</p>
+        </div>
+        <a href="" data-upload="dashboard-link" style="background-color: var(--color-secondary);">RETRY UPLOAD</a>
+    {% endif %}
+    
+</div>

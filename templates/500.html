@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}500 — Server Error{% endblock %}
+
+{% block content %}
+<div data-error="page">
+    <div data-error="card">
+        <div data-error="icon">⚠️</div>
+        <h1 data-error="code">500</h1>
+        <h2 data-error="title">SERVER ERROR</h2>
+        <p data-error="message">
+            An unexpected error occurred on our end. Our engineering team has been notified and is working to resolve the issue.
+        </p>
+
+        <div data-error="actions">
+            <!-- 
+              In a 500 error, we can't reliably check request.user, 
+              so we just provide a safe fallback link to the dashboard root.
+            -->
+            <a href="/" data-type="primary">
+                ← Return to Safety
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

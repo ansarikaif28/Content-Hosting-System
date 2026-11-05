@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Content Hosting System{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- HTMX for interactive tables -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    {# Disable any potential HTMX/client scripts on upload page to eliminate addEventListener null crashes #}
+    {% if request.path == '/upload/' or request.path|slice:':14' == '/upload/<int' %}
+    {% else %}
+    <script>
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+        document.body.addEventListener('htmx:send', (event) => {
+            console.log('HTMX Request sent to:', event.detail.path);
+        });
+        document.body.addEventListener('htmx:afterOnLoad', (event) => {
+            console.log('HTMX Response received for:', event.detail.path);
+        });
+    </script>
+    {% endif %}
+
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <div data-nav="brand">
+            <a href="{% url 'dashboard' %}">Content Hosting System</a>
+        </div>
+        <div data-nav="menu">
+            {% if user.is_authenticated %}
+                <span data-nav="user">
+                    {{ user.username }} ({{ user.get_role_display }})
+                </span>
+                {% if user.is_approver %}
+                    <a href="{% url 'logs' %}" data-nav="link">Logs</a>
+                {% endif %}
+                <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" data-nav="link" data-type="logout">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" data-nav="link">Login</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% if messages %}
+    <div data-msg-container>
+        {% for message in messages %}
+        <div role="alert" data-alert="{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>Content Hosting System</p>
+        <p data-footer="author">made by - Mohammed Kaif Mohd Javed</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

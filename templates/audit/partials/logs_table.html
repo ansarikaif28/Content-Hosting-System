@@ -1,0 +1,54 @@
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>
+                <a href="?sort={% if current_sort == '-timestamp' %}timestamp{% else %}-timestamp{% endif %}&action_type={{ current_action_filter }}&q={{ search_query }}"
+                   class="sort-link">
+                    Time
+                    {% if current_sort == '-timestamp' %}▼{% elif current_sort == 'timestamp' %}▲{% endif %}
+                </a>
+            </th>
+            <th>Actor</th>
+            <th>
+                <a href="?sort={% if current_sort == 'action_type' %}-{% endif %}action_type&action_type={{ current_action_filter }}&q={{ search_query }}"
+                   class="sort-link">
+                    Action
+                    {% if current_sort == 'action_type' %}▲{% elif current_sort == '-action_type' %}▼{% endif %}
+                </a>
+            </th>
+            <th>Target Hash</th>
+            <th>Details / State Snapshots</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.timestamp|date:"M d, H:i" }}</td>
+            <td>{{ log.actor.username|default:"System" }}</td>
+            <td>
+                <span class="action-badge action-{{ log.action_type|lower }}">
+                    {{ log.get_action_type_display }}
+                </span>
+            </td>
+            <td class="hash-cell" title="{{ log.related_hash }}">
+                {{ log.related_hash|truncatechars:12 }}
+            </td>
+            <td class="details-cell">
+                {% if log.old_state and log.new_state %}
+                    <span class="detail-label">Status:</span>
+                    {{ log.old_state.status|default:"—" }} → {{ log.new_state.status|default:"—" }}
+                {% endif %}
+                {% if log.details %}
+                    <br><small>{{ log.details }}</small>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="empty-state">
+                No log entries match your filters.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

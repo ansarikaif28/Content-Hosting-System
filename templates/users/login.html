@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Content Hosting System</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body data-page="login">
+    <div data-login="container">
+        <div data-login="card">
+            <h1 data-login="title">CONTENT HOSTING SYSTEM</h1>
+
+            {# Show messages from password reset, registration, etc. #}
+            {% if messages %}
+            <div data-msg-container>
+                {% for message in messages %}
+                    <div role="alert" data-alert="{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if form.errors %}
+            <div role="alert" data-alert="danger">
+                Invalid username or password. Please try again.
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+
+                <div data-form-group>
+                    <label for="id_username">Username:</label>
+                    {{ form.username }}
+                </div>
+
+                <div data-form-group>
+                    <label for="id_password">Password:</label>
+                    {{ form.password }}
+                </div>
+
+                <button type="submit" data-type="primary" data-width="full">
+                    LOGIN TO SYSTEM
+                </button>
+            </form>
+
+            <div data-login="footer">
+                <a href="{% url 'password_reset' %}">Forgot password?</a>
+                <span data-form="separator">|</span>
+                <a href="{% url 'register' %}">Create an account</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

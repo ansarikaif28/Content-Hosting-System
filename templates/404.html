@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}404 — Page Not Found{% endblock %}
+
+{% block content %}
+<div data-error="page">
+    <div data-error="card">
+        <div data-error="icon">🧭</div>
+        <h1 data-error="code">404</h1>
+        <h2 data-error="title">PAGE NOT FOUND</h2>
+        <p data-error="message">
+            The page you are looking for does not exist, has been removed, or is temporarily unavailable.
+        </p>
+
+        <div data-error="actions">
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" data-type="primary">
+                    ← Go to Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" data-type="primary">
+                    Go to Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

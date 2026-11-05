@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}System Audit Logs{% endblock %}
+
+{% block content %}
+<h1>SYSTEM AUDIT LOGS</h1>
+
+<!-- Filters -->
+<div class="log-filters">
+    <form method="get" action="{% url 'logs' %}" class="filter-form">
+        <div class="filter-group">
+            <select name="action_type" class="form-control">
+                <option value="">All Actions</option>
+                {% for value, label in action_type_choices %}
+                    <option value="{{ value }}"
+                            {% if current_action_filter == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <input type="date" name="date_from" value="{{ date_from }}"
+                   class="form-control" placeholder="From Date">
+
+            <input type="date" name="date_to" value="{{ date_to }}"
+                   class="form-control" placeholder="To Date">
+
+            <input type="text" name="q" value="{{ search_query }}"
+                   class="form-control" placeholder="Search hash or user...">
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    <a href="{% url 'export_logs' %}?action_type={{ current_action_filter }}&q={{ search_query }}"
+       class="btn btn-secondary">
+        Export to CSV
+    </a>
+</div>
+
+<!-- Logs Table -->
+<div id="logs-table-container">
+    {% include "audit/partials/logs_table.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}My Uploads — Dashboard{% endblock %}
+
+{% block content %}
+<div data-dash="header">
+    <h1>MY UPLOADS</h1>
+    <div data-dash="actions">
+        <a href="{% url 'upload' %}" data-type="primary">+ UPLOAD NEW FOLDER</a>
+        <div data-dash="search-box">
+            <form method="get" action="{% url 'dashboard' %}">
+                <input type="text"
+                    id="search-input"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Filter by folder name..."
+                    data-dash="search-input"
+                    autocomplete="off">
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="uploads-table-container">
+    {% include "content/partials/creator_table.html" %}
+</div>
+{% endblock %}

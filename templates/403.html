@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}403 — Access Denied{% endblock %}
+
+{% block content %}
+<div data-error="page">
+    <div data-error="card">
+        <div data-error="icon">🔒</div>
+        <h1 data-error="code">403</h1>
+        <h2 data-error="title">ACCESS DENIED</h2>
+        <p data-error="message">
+            You do not have permission to access this page.
+            This area is restricted to authorized users only.
+        </p>
+
+        <div data-error="details">
+            {% if request.user.is_authenticated %}
+                <p>
+                    Logged in as <strong>{{ request.user.username }}</strong>
+                    ({{ request.user.get_role_display }}).
+                </p>
+                <p>Your current role does not have access to this resource.</p>
+            {% else %}
+                <p>You are not logged in. Please log in to continue.</p>
+            {% endif %}
+        </div>
+
+        <div data-error="actions">
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" data-type="primary">
+                    ← Go to Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" data-type="primary">
+                    Go to Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
